@@ -1,6 +1,6 @@
-Import-Module -Name '..\..\Stubs.psd1' -Force
+Import-Module -Name "$($PSScriptRoot)\..\..\Stubs.psd1" -Force
 
-InModuleScope Indented.StubCommand {
+InModuleScope Stubs {
     Describe New-StubCmdlet -Tag 'New-StubCmdlet'{
         Context 'Output' {
             It 'Returns a single string' {

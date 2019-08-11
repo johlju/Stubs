@@ -1,6 +1,6 @@
 @{
     # Script module or binary module file associated with this manifest.
-    # RootModule = ''
+    RootModule = 'Stubs.psm1'
 
     # Version number of this module.
     ModuleVersion = '1.0.0'
@@ -15,7 +15,7 @@
     CompanyName = 'Viscalyx'
 
     # Copyright statement for this module
-    Copyright = '(c) 2019 Johan Ljunggren'
+    Copyright = '(c) 2019 Viscalyx'
 
     # Description of the functionality provided by this module
     Description = 'Create stub cmdlets for the cmdlets in a PowerShell module'
@@ -58,7 +58,7 @@
 
     # Functions to export from this module
     FunctionsToExport = @(
-        New-StubCmdlet
+        'New-StubCmdlet'
     )
 
     # Cmdlets to export from this module
@@ -91,7 +91,7 @@
             # LicenseUri = ''
 
             # A URL to the main website for this project.
-            ProjectUri = 'https://github.com/johlju/Stubs'
+            ProjectUri = 'https://github.com/viscalyx/stubs'
 
             # A URL to an icon representing this module.
             # IconUri = ''

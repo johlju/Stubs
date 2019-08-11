@@ -29,9 +29,9 @@
         Create a stub of the Test-Path command.
 
     .EXAMPLE
-        Get-Command -Module AppLocker | New-StubCmdlet
+        Get-Command -Module ActiveDirectory | New-StubCmdlet
 
-        Create a stub of all commands in the AppLocker module.
+        Create stubs of all the commands in the ActiveDirectory module.
 
     .NOTES
         Change log:
@@ -41,15 +41,15 @@ function New-StubCmdlet
 {
     # Suppressed because this command does not change state.
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseShouldProcessForStateChangingFunctions', '')]
-    [CmdletBinding(DefaultParameterSetName = 'FromPipeline')]
+    [CmdletBinding(DefaultParameterSetName = 'CommandInfo')]
     [OutputType([System.String])]
     param
     (
-        [Parameter(Position = 0, Mandatory, ParameterSetName = 'CommandName')]
+        [Parameter(Position = 0, Mandatory = $true, ParameterSetName = 'CommandName')]
         [System.String]
         $CommandName,
 
-        [Parameter(ValueFromPipeline, ParameterSetName = 'CommandInfo')]
+        [Parameter(ValueFromPipeline = $true, ParameterSetName = 'CommandInfo')]
         [System.Management.Automation.CommandInfo]
         $CommandInfo,
 
@@ -57,13 +57,15 @@ function New-StubCmdlet
         [ValidateScript( {
                 if ($null -ne $_.Ast.ParamBlock -or $null -ne $_.Ast.DynamicParamBlock)
                 {
-                    throw (New-Object ArgumentException ("FunctionBody scriptblock cannot contain Param or DynamicParam blocks"))
+                    throw (New-Object ArgumentException ("The function body scriptblock cannot contain Param or DynamicParam blocks"))
                 }
                 else
-                { $true
+                {
+                    $true
                 }
             })]
-        [scriptblock]$FunctionBody,
+        [System.Management.Automation.ScriptBlock]
+        $FunctionBody,
 
         [Parameter()]
         [System.Collections.Hashtable[]]
@@ -80,25 +82,26 @@ function New-StubCmdlet
         else
         {
             <#
-            PS C:\Users\johan.ljunggren> [System.Management.Automation.PSCmdlet]::CommonParameters
-            Verbose
-            Debug
-            ErrorAction
-            WarningAction
-            InformationAction
-            ErrorVariable
-            WarningVariable
-            OutVariable
-            OutBuffer
-            PipelineVariable
-            InformationVariable
-            PS C:\Users\johan.ljunggren> [System.Management.Automation.PSCmdlet]::OptionalCommonParameters
-            WhatIf
-            Confirm
-            UseTransaction
+                [System.Management.Automation.PSCmdlet]::CommonParameters
+                    Verbose
+                    Debug
+                    ErrorAction
+                    WarningAction
+                    InformationAction
+                    ErrorVariable
+                    WarningVariable
+                    OutVariable
+                    OutBuffer
+                    PipelineVariable
+                    InformationVariable
+
+                [System.Management.Automation.PSCmdlet]::OptionalCommonParameters
+                    WhatIf
+                    Confirm
+                    UseTransaction
             #>
-            $commonParameters = ([CommonParameters]).GetProperties().Name
-            $shouldProcessParameters = ([ShouldProcessParameters]).GetProperties().Name
+            # $commonParameters = [System.String[]] [System.Management.Automation.PSCmdlet]::CommonParameters
+            # $optionalCommonParameters = [System.String[]] [System.Management.Automation.PSCmdlet]::OptionalCommonParameters
         }
     }
 
@@ -110,44 +113,45 @@ function New-StubCmdlet
             {
                 $script = New-Object -TypeName System.Text.StringBuilder
 
-                $null = $script.AppendFormat('function {0} {{', $CommandInfo.Name).
-                AppendLine()
+                $null = $script.AppendFormat('function {0}', $CommandInfo.Name).AppendLine()
+                $null = $script.AppendLine('{')
 
                 # Write help
-                $helpContent = Get-Help $CommandInfo.Name -Full
+                $helpContent = Get-Help -Name $CommandInfo.Name -Full
                 if ($helpContent.Synopsis)
                 {
-                    $null = $script.AppendLine('<#').
-                    AppendLine('.SYNOPSIS').
-                    AppendFormat('    {0}', $helpContent.Synopsis.Trim()).
-                    AppendLine()
+                    $null = $script.AppendLine('<#')
+                    $null = $script.AppendLine('.SYNOPSIS')
+                    $null = $script.AppendFormat('    {0}', $helpContent.Synopsis.Trim()).AppendLine()
 
                     foreach ($parameter in $CommandInfo.Parameters.Keys)
                     {
-                        if ($parameter -notin $commonParameters -and $parameter -notin $shouldProcessParameters)
+                        if (
+                            $parameter -notin [System.Management.Automation.PSCmdlet]::CommonParameters `
+                            -and $parameter -notin [System.Management.Automation.PSCmdlet]::OptionalCommonParameters)
                         {
-                            $parameterHelp = ($helpcontent.parameters.parameter | Where-Object { $_.Name -eq $parameter }).Description.Text
+                            $parameterHelp = ($helpContent.Parameters.Parameter |
+                                Where-Object { $_.Name -eq $parameter }).Description.Text
+
                             if ($parameterHelp)
                             {
                                 $paragraphs = $parameterHelp.Split("`n", [StringSplitOptions]::RemoveEmptyEntries)
 
-                                $null = $script.AppendFormat('.PARAMETER {0}', $parameter).
-                                AppendLine()
+                                $null = $script.AppendFormat('.PARAMETER {0}', $parameter).AppendLine()
 
                                 foreach ($paragraph in $paragraphs)
                                 {
-                                    $null = $script.AppendFormat('    {0}', $paragraph).
-                                    AppendLine()
+                                    $null = $script.AppendFormat('    {0}', $paragraph).AppendLine()
                                 }
                             }
                         }
                     }
-                    $null = $script.AppendLine('#>').
-                    AppendLine()
+
+                    $null = $script.AppendLine('#>').AppendLine()
                 }
 
                 # Write CmdletBinding
-                if ($cmdletBindingAttribute = [ProxyCommand]::GetCmdletBindingAttribute($CommandInfo))
+                if ($cmdletBindingAttribute = [System.Management.Automation.ProxyCommand]::GetCmdletBindingAttribute($CommandInfo))
                 {
                     $null = $script.AppendLine($cmdletBindingAttribute)
                 }
@@ -172,7 +176,7 @@ function New-StubCmdlet
                 {
                     $null = $script.Append('param (')
 
-                    if ($param = [ProxyCommand]::GetParamBlock($CommandInfo))
+                    if ($param = [System.Management.Automation.ProxyCommand]::GetParamBlock($CommandInfo))
                     {
                         foreach ($line in $param -split '\r?\n')
                         {
@@ -205,12 +209,6 @@ function New-StubCmdlet
                 if ($PSBoundParameters.ContainsKey('ReplaceTypeDefinition'))
                 {
                     $newStubDynamicParamArguments['ReplaceTypeDefinition'] = $ReplaceTypeDefinition
-                }
-
-                if ($dynamicParams = New-StubDynamicParam @newStubDynamicParamArguments)
-                {
-                    # Write dynamic params
-                    $null = $script.AppendScript($dynamicParams)
                 }
 
                 # Insert function body, if specified
