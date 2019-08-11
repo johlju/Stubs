@@ -1,6 +1,6 @@
 <#
     .SYNOPSIS
-        Create a new partial copy of a command.
+        Create a new stub of a cmdlet.
 
     .DESCRIPTION
         New-StubCmdlet recreates a command as a function with param block and
@@ -79,6 +79,24 @@ function New-StubCmdlet
         }
         else
         {
+            <#
+            PS C:\Users\johan.ljunggren> [System.Management.Automation.PSCmdlet]::CommonParameters
+            Verbose
+            Debug
+            ErrorAction
+            WarningAction
+            InformationAction
+            ErrorVariable
+            WarningVariable
+            OutVariable
+            OutBuffer
+            PipelineVariable
+            InformationVariable
+            PS C:\Users\johan.ljunggren> [System.Management.Automation.PSCmdlet]::OptionalCommonParameters
+            WhatIf
+            Confirm
+            UseTransaction
+            #>
             $commonParameters = ([CommonParameters]).GetProperties().Name
             $shouldProcessParameters = ([ShouldProcessParameters]).GetProperties().Name
         }
@@ -90,12 +108,7 @@ function New-StubCmdlet
         {
             try
             {
-                $script = New-Object ScriptBuilder
-
-                if ($IncludeTypeDefinition)
-                {
-                    $null = $script.AppendLine((Get-StubRequiredType -CommandInfo $CommandInfo | New-StubType))
-                }
+                $script = New-Object -TypeName System.Text.StringBuilder
 
                 $null = $script.AppendFormat('function {0} {{', $CommandInfo.Name).
                 AppendLine()
