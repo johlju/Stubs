@@ -212,6 +212,26 @@ InModuleScope Stubs {
                 }
             }
 
+            # function Test-Function {
+            #     dynamicparam {
+            #         $parameters = New-Object System.Management.Automation.RuntimeDefinedParameterDictionary
+
+            #         [Attribute[]]$attributes = & {
+            #             $attribute = New-Object Parameter
+            #             $attribute.Mandatory = $true
+            #             $attribute.Position = 1
+            #             $attribute.ParameterSetName = 'Name'
+
+            #             $attribute
+            #         }
+
+            #         $parameter = New-Object System.Management.Automation.RuntimeDefinedParameter('TestParameter', [Object], $attributes)
+            #         $parameters.Add('TestParameter', $parameter)
+
+            #         return $parameters
+            #     }
+            # }
+
             Context 'When using parameter ReplaceTypeDefinition' {
                 BeforeAll {
                     [String]$namespaceName = 'Microsoft.ActiveDirectory.Management'
